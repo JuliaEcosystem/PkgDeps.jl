@@ -21,10 +21,20 @@ depot = joinpath(@__DIR__, "resources")
 end
 
 @testset "find_upstream_dependencies" begin
-    registry = reachable_registries(; depots=depot)
-    dependents = find_upstream_dependencies("UpDep"; registries=registry)
+    @testset "specific registry" begin
+        foobar_registry = reachable_registries("Foobar"; depots=depot)
 
-    @test length(dependents) == 3
+        dependents = find_upstream_dependencies("UpDep"; registries=foobar_registry)
 
-    [@test case in dependents for case in ["Case1", "Case2", "Case3"]]
+        @test length(dependents) == 2
+        [@test case in dependents for case in ["Case1", "Case2"]]
+    end
+
+    @testset "all registries" begin
+        registries = reachable_registries(; depots=depot)
+        dependents = find_upstream_dependencies("UpDep"; registries=registries)
+
+        @test length(dependents) == 3
+        [@test case in dependents for case in ["Case1", "Case2", "Case3"]]
+    end
 end
