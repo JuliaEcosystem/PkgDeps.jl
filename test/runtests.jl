@@ -1,5 +1,5 @@
 using PkgDeps
-using Test# Create a tmp directory
+using Test
 # Create some temp package TOML files
 # Test that we get them properly
 
