@@ -24,7 +24,7 @@ end
     registry = reachable_registries(; depots=depot)
     dependents = find_upstream_dependencies("UpDep"; registries=registry)
 
-    @test length(dependents) == 2
+    @test length(dependents) == 3
 
-    [@test case in dependents for case in ["Case1", "Case2"]]
+    [@test case in dependents for case in ["Case1", "Case2", "Case3"]]
 end
