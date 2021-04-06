@@ -1,51 +1,42 @@
 module PkgDeps
 
+using Pkg.Types: VersionNumber, VersionRange
 using TOML: parsefile
 using UUIDs
 
 export PkgEntry, RegistryInstance
-export find_upstream_dependencies, reachable_registries
+export find_downstream_dependencies, reachable_registries
 
-struct PkgEntry
-    path::String
-    registry_path::String
-    name::String
-    uuid::UUID
-end
+include("pkg_entry.jl")
+include("registry_instance.jl")
 
-struct RegistryInstance
-    path::String
-    name::String
-    uuid::UUID
-    url::Union{String, Nothing}
-    repo::Union{String, Nothing}
-    description::Union{String, Nothing}
-    pkgs::Dict{AbstractString, PkgEntry}
-end
 
-function RegistryInstance(path::AbstractString)
-    d = parsefile(joinpath(path, "Registry.toml"))
-    pkgs = Dict{AbstractString, PkgEntry}()
+"""
+    _get_latest_version(base_path::AbstractString)
 
-    for (uuid, info) in d["packages"]
-        uuid = UUID(uuid)
-        info
-        name = info["name"]
-        pkgpath = info["path"]
-        pkg = PkgEntry(pkgpath, path, name, uuid)
-        pkgs[name] = pkg
+Get the latest VersionNumber for base_path/Versions.toml
+
+# Arguments
+- `base_path::AbstractString`: Base path to look for Versions.toml
+
+# Returns
+- `VersionNumber`: Highest version number found in base_path/Versions.toml
+
+# Throws
+- `VersionTOMLNotFound`: Versions.toml does not exist at the base_path
+"""
+function _get_latest_version(base_path::AbstractString)
+    versions_file_path = joinpath(base_path, "Versions.toml")
+
+    if isfile(versions_file_path)
+        versions_content = parsefile(versions_file_path)
+        versions = [VersionNumber(v) for v in collect(keys(versions_content))]
+        sort!(versions, rev=true)
+
+        return first(versions)
     end
-
-    return RegistryInstance(
-        path,
-        d["name"],
-        UUID(d["uuid"]),
-        get(d, "url", nothing),
-        get(d, "repo", nothing),
-        get(d, "description", nothing),
-        pkgs
-    )
 end
+
 
 """
     reachable_registries(registry_names::Array)
@@ -92,7 +83,7 @@ reachable_registries(registry_name::String; depots::Union{String, Vector{String}
 
 
 """
-    find_upstream_dependencies(pkg_name::AbstractString; registries::Array{PkgDeps.RegistryInstance}=reachable_registries())
+    find_downstream_dependencies(pkg_name::AbstractString; registries::Array{PkgDeps.RegistryInstance}=reachable_registries())
 
 Find all dependents of `pkg_name` for the current master version.
 
@@ -105,29 +96,38 @@ Find all dependents of `pkg_name` for the current master version.
 # Returns
 - `Array{String}`: List of packages which depend on `pkg_name`
 """
-function find_upstream_dependencies(pkg_name::AbstractString; registries::Array{RegistryInstance}=reachable_registries())
-    upstream_dependencies = String[]
+function find_downstream_dependencies(
+    pkg_name::AbstractString;
+    registries::Array{RegistryInstance}=reachable_registries()
+)
+    downstream_dependencies = String[]
 
     for rego in registries
         for (pkg, v) in rego.pkgs
-            path = joinpath(v.registry_path, v.path, "Deps.toml")
+            base_path = joinpath(v.registry_path, v.path)
+            deps_file_path = joinpath(base_path, "Deps.toml")
 
-            if isfile(path)
-                file_contents = parsefile(path)
+            if isfile(deps_file_path)
+                deps_content = parsefile(deps_file_path)
+                dependency_versions = collect(keys(deps_content))
+                latest_version = _get_latest_version(base_path)
 
-                dep_keys = [k for k in collect(keys(file_contents)) if endswith(k, "-0") || k == "0"]
+                # Use the latest_version of pkg, and check to see if pkg_name is in its dependents
+                for version_range in dependency_versions
+                    if in(latest_version, VersionRange(version_range))
+                        dependencies = collect(keys(deps_content[version_range]))
 
-                deps = getindex.(Ref(file_contents), dep_keys)
-                deps = vcat(collect.(keys.(deps))...)
-
-                if pkg_name in deps
-                    push!(upstream_dependencies, pkg)
+                        # Check if pkg_name is used in the latest version of pkg
+                        if pkg_name in dependencies
+                            push!(downstream_dependencies, pkg)
+                        end
+                    end
                 end
             end
         end
     end
 
-    return upstream_dependencies
+    return downstream_dependencies
 end
 
 end
