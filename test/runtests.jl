@@ -1,7 +1,5 @@
 using PkgDeps
 using Test
-# Create some temp package TOML files
-# Test that we get them properly
 
 depot = joinpath(@__DIR__, "resources")
 
@@ -20,21 +18,22 @@ depot = joinpath(@__DIR__, "resources")
     end
 end
 
-@testset "find_upstream_dependencies" begin
-    @testset "specific registry" begin
-        foobar_registry = reachable_registries("Foobar"; depots=depot)
+@testset "find_downstream_dependencies" begin
+    foobar_registry = reachable_registries("Foobar"; depots=depot)
+    all_registries = reachable_registries(; depots=depot)
 
-        dependents = find_upstream_dependencies("UpDep"; registries=foobar_registry)
+    @testset "specific registry" begin
+        dependents = find_downstream_dependencies("DownDep"; registries=foobar_registry)
 
         @test length(dependents) == 2
         [@test case in dependents for case in ["Case1", "Case2"]]
     end
 
     @testset "all registries" begin
-        registries = reachable_registries(; depots=depot)
-        dependents = find_upstream_dependencies("UpDep"; registries=registries)
+        dependents = find_downstream_dependencies("DownDep"; registries=all_registries)
 
         @test length(dependents) == 3
+        @test !("Case4" in dependents)
         [@test case in dependents for case in ["Case1", "Case2", "Case3"]]
     end
 end

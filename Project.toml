@@ -1,9 +1,10 @@
 name = "PkgDeps"
 uuid = "839e9fc8-855b-5b3c-a3b7-2833d3dd1f59"
 license = "MIT"
-version = "0.1.0"
+version = "0.2.0"
 
 [deps]
+Pkg = "44cfe95a-1eb2-52ea-b672-e2afdf69b78f"
 TOML = "fa267f1f-6049-4f14-aa54-33bafae1ed76"
 UUIDs = "cf7118a7-6976-5b1a-9a39-7adc72f591a4"
 
