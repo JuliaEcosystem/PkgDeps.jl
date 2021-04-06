@@ -31,9 +31,8 @@ function _get_latest_version(base_path::AbstractString)
     if isfile(versions_file_path)
         versions_content = parsefile(versions_file_path)
         versions = [VersionNumber(v) for v in collect(keys(versions_content))]
-        sort!(versions, rev=true)
 
-        return first(versions)
+        return first(findmax(versions))
     end
 end
 

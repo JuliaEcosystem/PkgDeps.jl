@@ -23,14 +23,14 @@ end
     all_registries = reachable_registries(; depots=depot)
 
     @testset "specific registry" begin
-        dependents = find_downstream_dependencies("UpDep"; registries=foobar_registry)
+        dependents = find_downstream_dependencies("DownDep"; registries=foobar_registry)
 
         @test length(dependents) == 2
         [@test case in dependents for case in ["Case1", "Case2"]]
     end
 
     @testset "all registries" begin
-        dependents = find_downstream_dependencies("UpDep"; registries=all_registries)
+        dependents = find_downstream_dependencies("DownDep"; registries=all_registries)
 
         @test length(dependents) == 3
         @test !("Case4" in dependents)
