@@ -16,4 +16,7 @@ Single minor pre-1.0 release that has always been dependent on `DownDep`.
 Single post-1.0 release that is dependent on `DownDep`.
 
 ### Case4
-Two releases where `DownDep` was previously a depdenency and no longer is.
+Two releases where `DownDep` was previously a dependency and no longer is.
+
+### Case5
+Single post-1.0 release that depends on `Case3`.

@@ -5,4 +5,4 @@ description = "Fake private package registry."
 
 [packages]
 00000000-1111-2222-3333-444444444444 = { name = "Case1", path = "Case1" }
-000eeb74-f857-587a-a816-be5685e97e75 = { name = "Case2", path = "Case2" }
+1376b5c2-3308-4f18-856a-cc9ce91b3b5c = { name = "Case2", path = "Case2" }
