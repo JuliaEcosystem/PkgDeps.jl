@@ -193,11 +193,11 @@ function find_dependencies(
     pkg_name::AbstractString;
     registries::Array{RegistryInstance}=reachable_registries()
 )
-    return find_dependencies!(Set{String}(), pkg_name; registries)
+    return _find_dependencies!(Set{String}(), pkg_name; registries)
 end
 
 # recursive helper that accumulates into `upstream_dependencies`
-function find_dependencies!(
+function _find_dependencies!(
     upstream_dependencies::Set{String},
     pkg_name::AbstractString;
     registries::Array{RegistryInstance}=reachable_registries()
@@ -208,7 +208,7 @@ function find_dependencies!(
             for dependency in dependencies
                 if dependency ∉ upstream_dependencies
                     push!(upstream_dependencies, dependency)
-                    find_dependencies!(upstream_dependencies, dependency; registries=registries)
+                    _find_dependencies!(upstream_dependencies, dependency; registries=registries)
                 end
             end
         end
