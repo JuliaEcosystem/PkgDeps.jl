@@ -5,7 +5,7 @@ using TOML: parsefile
 using UUIDs
 
 export PkgEntry, RegistryInstance
-export find_direct_downstream_dependencies, find_dependencies, find_direct_dependencies, reachable_registries
+export find_dependencies, find_direct_dependencies, find_direct_downstream_dependencies, reachable_registries
 
 include("pkg_entry.jl")
 include("registry_instance.jl")
@@ -171,6 +171,7 @@ function find_direct_dependencies(entry::PkgEntry)
             end
         end
     end
+
     return latest_dependencies
 end
 
