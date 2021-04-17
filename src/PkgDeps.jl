@@ -5,26 +5,13 @@ using TOML: parsefile
 using UUIDs
 
 export PkgEntry, RegistryInstance
-export find_downstream_dependencies, reachable_registries
+export users, reachable_registries
 
 include("pkg_entry.jl")
 include("registry_instance.jl")
 
+const GENERAL_REGISTRY = "General"
 
-"""
-    _get_latest_version(base_path::AbstractString)
-
-Get the latest VersionNumber for base_path/Versions.toml
-
-# Arguments
-- `base_path::AbstractString`: Base path to look for Versions.toml
-
-# Returns
-- `VersionNumber`: Highest version number found in base_path/Versions.toml
-
-# Throws
-- `VersionTOMLNotFound`: Versions.toml does not exist at the base_path
-"""
 function _get_latest_version(base_path::AbstractString)
     versions_file_path = joinpath(base_path, "Versions.toml")
 
@@ -37,8 +24,42 @@ function _get_latest_version(base_path::AbstractString)
 end
 
 
+function _get_pkg_name(
+    uuid::UUID;
+    kwargs...
+)
+    registries = reachable_registries(; kwargs...)
+
+    for rego in registries
+        for pkg in rego.pkgs
+            if pkg[2].uuid == uuid
+                return pkg[1]
+            end
+        end
+    end
+end
+_get_pkg_name(uuid::String; kwargs...) = _get_pkg_name(UUID(uuid); kwargs...)
+
+
+function _get_pkg_uuid(
+    pkg_name::String, registry_name::String;
+    depots::Union{String, Vector{String}}=Base.DEPOT_PATH,
+    kwargs...
+)
+    registry = reachable_registries(registry_name; depots=depots)
+
+    if haskey(registry.pkgs, pkg_name)
+        return registry.pkgs[pkg_name].uuid
+    else
+        throw(error("$pkg_name not in $registry_name"))
+    end
+end
+
+
 """
     reachable_registries(registry_names::Array)
+    reachable_registries(registry_name::String; depots::Union{String, Vector{String}}=Base.DEPOT_PATH)
+    reachable_registries(; depots::Union{String, Vector{String}}=Base.DEPOT_PATH)
 
 Get an array of found registries.
 
@@ -77,28 +98,30 @@ function reachable_registries(
 
     return registries
 end
+reachable_registries(registry_name::String; depots::Union{String, Vector{String}}=Base.DEPOT_PATH) = first(reachable_registries([registry_name]; depots=depots))
 reachable_registries(; depots::Union{String, Vector{String}}=Base.DEPOT_PATH) = reachable_registries([]; depots=depots)
-reachable_registries(registry_name::String; depots::Union{String, Vector{String}}=Base.DEPOT_PATH) = reachable_registries([registry_name]; depots=depots)
 
 
 """
-    find_downstream_dependencies(pkg_name::AbstractString; registries::Array{PkgDeps.RegistryInstance}=reachable_registries())
+    users(uuid::UUID; registries::Array{RegistryInstance}=reachable_registries())
 
-Find all dependents of `pkg_name` for the current master version.
+Find the users of a given package.
 
 # Arguments
-- `pkg_name::AbstractString`: Name of the package to find dependents
+- `uuid::UUID`: UUID of the package
 
 # Keywords
-- `registries::Array{RegistryInstance}=reachable_registries()`: Registries to look into
+- `registries::Array{RegistryInstance}=reachable_registries()`: Registry to find users in
 
 # Returns
-- `Array{String}`: List of packages which depend on `pkg_name`
+- `Array{String}`: All packages which are dependent on `pkg_name`
 """
-function find_downstream_dependencies(
-    pkg_name::AbstractString;
-    registries::Array{RegistryInstance}=reachable_registries()
+function users(
+    uuid::UUID;
+    registries::Array{RegistryInstance}=reachable_registries(),
+    kwargs...
 )
+    pkg_name = _get_pkg_name(uuid; kwargs...)
     downstream_dependencies = String[]
 
     for rego in registries
@@ -127,6 +150,30 @@ function find_downstream_dependencies(
     end
 
     return downstream_dependencies
+end
+
+
+"""
+    users(pkg_name::String; pkg_registry_name::String=GENERAL_REGISTRY)
+
+Find all packages which use `pkg_name`. Use the `pkg_registry_name` to look up the UUID of `pkg_name`.
+
+# Arguments
+- `pkg_name::String`: Find users of this package
+
+# Keywords
+- `registry_name::String=GENERAL_REGISTRY`: Name of registry where `pkg_name` is active
+
+# Returns
+- `Array{String}`: All packages which are dependent on `pkg_name`
+"""
+function users(
+    pkg_name::String;
+    pkg_registry_name::String=GENERAL_REGISTRY,
+    kwargs...
+)
+    uuid = _get_pkg_uuid(pkg_name, pkg_registry_name; kwargs...)
+    return users(uuid; kwargs...)
 end
 
 end
