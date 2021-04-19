@@ -1,8 +1,33 @@
 using PkgDeps
 using Test
+using UUIDs
 
 depot = joinpath(@__DIR__, "resources")
 
+
+@testset "internal functions" begin
+    @testset "_get_pkg_name" begin
+        expected = "Case1"
+        pkg_name = PkgDeps._get_pkg_name(UUID("00000000-1111-2222-3333-444444444444"); depots=depot)
+
+        @test expected == pkg_name
+    end
+
+    @testset "_get_pkg_uuid" begin
+        expected = UUID("00000000-1111-2222-3333-444444444444")
+        pkg_uuid = PkgDeps._get_pkg_uuid("Case1", "Foobar"; depots=depot)
+
+        @test expected == pkg_uuid
+    end
+
+    @testset "_get_latest_version" begin
+        expected = v"0.2.0"
+        path = joinpath("resources", "registries", "General", "Case4")
+        result = PkgDeps._get_latest_version(path)
+
+        @test expected == result
+    end
+end
 
 @testset "reachable_registries" begin
     @testset "specfic registry -- $(typeof(v))" for v in ("Foobar", ["Foobar"])
