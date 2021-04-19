@@ -24,16 +24,13 @@ function _get_latest_version(base_path::AbstractString)
 end
 
 
-function _get_pkg_name(
-    uuid::UUID;
-    kwargs...
-)
+function _get_pkg_name(uuid::UUID; kwargs...)
     registries = reachable_registries(; kwargs...)
 
     for rego in registries
-        for pkg in rego.pkgs
-            if pkg[2].uuid == uuid
-                return pkg[1]
+        for (pkg_name, pkg_entry) in rego.pkgs
+            if pkg_entry.uuid == uuid
+                return pkg_name
             end
         end
     end
