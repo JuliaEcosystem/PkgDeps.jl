@@ -5,13 +5,19 @@ using TOML: parsefile
 using UUIDs
 
 export PkgEntry, RegistryInstance
+export NoUUIDMatch, PackageNotInRegistry
 export users, reachable_registries
 
 include("pkg_entry.jl")
 include("registry_instance.jl")
+include("exceptions.jl")
 
 const GENERAL_REGISTRY = "General"
 
+
+"""
+Get the latest VersionNumber for base_path/Versions.toml
+"""
 function _get_latest_version(base_path::AbstractString)
     versions_file_path = joinpath(base_path, "Versions.toml")
 
@@ -24,6 +30,9 @@ function _get_latest_version(base_path::AbstractString)
 end
 
 
+"""
+Get the package name from a UUID
+"""
 function _get_pkg_name(uuid::UUID; kwargs...)
     registries = reachable_registries(; kwargs...)
 
@@ -34,10 +43,16 @@ function _get_pkg_name(uuid::UUID; kwargs...)
             end
         end
     end
+
+    throw(NoUUIDMatch("No package found with the UUID $uuid"))
 end
 _get_pkg_name(uuid::String; kwargs...) = _get_pkg_name(UUID(uuid); kwargs...)
 
 
+"""
+Get the UUID from a package name and the registry its in.
+Specify a registry name as well to avoid ambiguity with same package names in multiple registries.
+"""
 function _get_pkg_uuid(
     pkg_name::String, registry_name::String;
     depots::Union{String, Vector{String}}=Base.DEPOT_PATH,
@@ -48,7 +63,7 @@ function _get_pkg_uuid(
     if haskey(registry.pkgs, pkg_name)
         return registry.pkgs[pkg_name].uuid
     else
-        throw(error("$pkg_name not in $registry_name"))
+        throw(PackageNotInRegistry("$pkg_name not in $registry_name"))
     end
 end
 

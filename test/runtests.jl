@@ -7,17 +7,29 @@ depot = joinpath(@__DIR__, "resources")
 
 @testset "internal functions" begin
     @testset "_get_pkg_name" begin
-        expected = "Case1"
-        pkg_name = PkgDeps._get_pkg_name(UUID("00000000-1111-2222-3333-444444444444"); depots=depot)
+        @testset "uuid to name" begin
+            expected = "Case1"
+            pkg_name = PkgDeps._get_pkg_name(UUID("00000000-1111-2222-3333-444444444444"); depots=depot)
 
-        @test expected == pkg_name
+            @test expected == pkg_name
+        end
+
+        @testset "exception" begin
+            @test_throws NoUUIDMatch PkgDeps._get_pkg_name(UUID("00000000-0000-0000-0000-000000000000"); depots=depot)
+        end
     end
 
     @testset "_get_pkg_uuid" begin
-        expected = UUID("00000000-1111-2222-3333-444444444444")
-        pkg_uuid = PkgDeps._get_pkg_uuid("Case1", "Foobar"; depots=depot)
+        @testset "name to uuid" begin
+            expected = UUID("00000000-1111-2222-3333-444444444444")
+            pkg_uuid = PkgDeps._get_pkg_uuid("Case1", "Foobar"; depots=depot)
 
-        @test expected == pkg_uuid
+            @test expected == pkg_uuid
+        end
+
+        @testset "exception" begin
+            @test_throws PackageNotInRegistry PkgDeps._get_pkg_uuid("FakePackage", "Foobar"; depots=depot)
+        end
     end
 
     @testset "_get_latest_version" begin
