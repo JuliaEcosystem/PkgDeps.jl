@@ -166,7 +166,7 @@ end
 
 
 """
-    users(pkg_name::String; pkg_registry_name::String=GENERAL_REGISTRY)
+    users(pkg_name::String; pkg_registry_name::String="$GENERAL_REGISTRY")
 
 Find all packages which use `pkg_name`. Use the `pkg_registry_name` to look up the UUID of `pkg_name`.
 
@@ -174,7 +174,7 @@ Find all packages which use `pkg_name`. Use the `pkg_registry_name` to look up t
 - `pkg_name::String`: Find users of this package
 
 # Keywords
-- `registry_name::String=GENERAL_REGISTRY`: Name of registry where `pkg_name` is active
+- `registry_name::String="$GENERAL_REGISTRY"`: Name of registry where `pkg_name` is active
 
 # Returns
 - `Array{String}`: All packages which are dependent on `pkg_name`
