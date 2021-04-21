@@ -171,7 +171,7 @@ end
 Find all packages which use `pkg_name`.
 
 The `pkg_registry_name` should be the name of the registry where `pkg_name` is registered.
-This is use to look up the UUID of `pkg_name`.
+This is used to look up the UUID of `pkg_name`.
 
 # Arguments
 - `pkg_name::String`: Find users of this package.
