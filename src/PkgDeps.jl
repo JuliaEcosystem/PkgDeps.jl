@@ -115,18 +115,22 @@ reachable_registries(; depots::Union{String, Vector{String}}=Base.DEPOT_PATH) = 
 
 
 """
-    users(uuid::UUID; registries=reachable_registries())
+    users(uuid::UUID; kwargs...)
+    users(pkg_name::String, pkg_registry_name::String="$GENERAL_REGISTRY"; kwargs...)
 
 Find the users of a given package.
 
 # Arguments
 - `uuid::UUID`: UUID of the package.
+- `pkg_name::String`: Find users of this package.
+- `pkg_registry_name::String="$GENERAL_REGISTRY"`: Name of registry where `pkg_name` is
+  registered. This is used to look up the UUID of `pkg_name`.
 
 # Keywords
 - `registries::Array{RegistryInstance}=reachable_registries()`: Registries to search for users.
 
 # Returns
-- `Array{String}`: All packages which are dependent on `pkg_name`.
+- `Array{String}`: All packages which are dependent on the given package.
 """
 function users(
     uuid::UUID;
@@ -164,32 +168,9 @@ function users(
     return downstream_dependencies
 end
 
-
-"""
-    users(pkg_name::String; pkg_registry_name="$GENERAL_REGISTRY", registries=reachable_registries())
-
-Find all packages which use `pkg_name`.
-
-The `pkg_registry_name` should be the name of the registry where `pkg_name` is registered.
-This is used to look up the UUID of `pkg_name`.
-
-# Arguments
-- `pkg_name::String`: Find users of this package.
-
-# Keywords
-- `pkg_registry_name::String="$GENERAL_REGISTRY"`: Name of registry where `pkg_name` is registered.
-- `registries::Array{RegistryInstance}=reachable_registries()`: Registries to search for users.
-
-# Returns
-- `Array{String}`: All packages which are dependent on `pkg_name`.
-"""
-function users(
-    pkg_name::String;
-    pkg_registry_name::String=GENERAL_REGISTRY,
-    kwargs...
-)
+function users(pkg_name::String, pkg_registry_name::String=GENERAL_REGISTRY; kwargs...)
     uuid = _get_pkg_uuid(pkg_name, pkg_registry_name; kwargs...)
     return users(uuid; kwargs...)
 end
 
-end
+end  # module

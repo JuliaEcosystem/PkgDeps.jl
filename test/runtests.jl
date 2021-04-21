@@ -60,14 +60,14 @@ end
     all_registries = reachable_registries(; depots=depot)
 
     @testset "specific registry" begin
-        dependents = users("DownDep"; pkg_registry_name="Foobar", depots=depot, registries=[foobar_registry])
+        dependents = users("DownDep", "Foobar"; depots=depot, registries=[foobar_registry])
 
         @test length(dependents) == 2
         [@test case in dependents for case in ["Case1", "Case2"]]
     end
 
     @testset "all registries" begin
-        dependents = users("DownDep"; pkg_registry_name="Foobar", depots=depot, registries=all_registries)
+        dependents = users("DownDep", "Foobar"; depots=depot, registries=all_registries)
 
         @test length(dependents) == 3
         @test !("Case4" in dependents)
