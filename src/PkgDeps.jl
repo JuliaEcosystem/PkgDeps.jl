@@ -50,7 +50,7 @@ _get_pkg_name(uuid::String; kwargs...) = _get_pkg_name(UUID(uuid); kwargs...)
 
 
 """
-Get the UUID from a package name and the registry its in.
+Get the UUID from a package name and the registry it is in.
 Specify a registry name as well to avoid ambiguity with same package names in multiple registries.
 """
 function _get_pkg_uuid(
@@ -115,18 +115,18 @@ reachable_registries(; depots::Union{String, Vector{String}}=Base.DEPOT_PATH) = 
 
 
 """
-    users(uuid::UUID; registries::Array{RegistryInstance}=reachable_registries())
+    users(uuid::UUID; registries=reachable_registries())
 
 Find the users of a given package.
 
 # Arguments
-- `uuid::UUID`: UUID of the package
+- `uuid::UUID`: UUID of the package.
 
 # Keywords
-- `registries::Array{RegistryInstance}=reachable_registries()`: Registry to find users in
+- `registries::Array{RegistryInstance}=reachable_registries()`: Registries to search for users.
 
 # Returns
-- `Array{String}`: All packages which are dependent on `pkg_name`
+- `Array{String}`: All packages which are dependent on `pkg_name`.
 """
 function users(
     uuid::UUID;
@@ -166,18 +166,22 @@ end
 
 
 """
-    users(pkg_name::String; pkg_registry_name::String="$GENERAL_REGISTRY")
+    users(pkg_name::String; pkg_registry_name="$GENERAL_REGISTRY", registries=reachable_registries())
 
-Find all packages which use `pkg_name`. Use the `pkg_registry_name` to look up the UUID of `pkg_name`.
+Find all packages which use `pkg_name`.
+
+The `pkg_registry_name` should be the name of the registry where `pkg_name` is registered.
+This is used to look up the UUID of `pkg_name`.
 
 # Arguments
-- `pkg_name::String`: Find users of this package
+- `pkg_name::String`: Find users of this package.
 
 # Keywords
-- `registry_name::String="$GENERAL_REGISTRY"`: Name of registry where `pkg_name` is active
+- `pkg_registry_name::String="$GENERAL_REGISTRY"`: Name of registry where `pkg_name` is registered.
+- `registries::Array{RegistryInstance}=reachable_registries()`: Registries to search for users.
 
 # Returns
-- `Array{String}`: All packages which are dependent on `pkg_name`
+- `Array{String}`: All packages which are dependent on `pkg_name`.
 """
 function users(
     pkg_name::String;
