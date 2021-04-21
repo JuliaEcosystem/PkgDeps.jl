@@ -170,6 +170,11 @@ function users(pkg_name::String, pkg_registry_name::String=GENERAL_REGISTRY; kwa
 end
 
 # Useful for testing using with registries not in `DEPOT_PATH`.
+"""
+    users(pkg_name::String, pkg_registry::RegistryInstance; kwargs...)
+
+Find the users of the package named `pkg_name` which is registered in `pkg_registry`.
+"""
 function users(pkg_name::String, pkg_registry::RegistryInstance; kwargs...)
     uuid = _get_pkg_uuid(pkg_name, pkg_registry)
     return users(uuid; kwargs...)
