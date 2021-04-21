@@ -1,6 +1,7 @@
 module PkgDeps
 
 using Pkg.Types: VersionNumber, VersionRange
+using REPL
 using TOML: parsefile
 using UUIDs
 
@@ -11,61 +12,9 @@ export users, reachable_registries
 include("pkg_entry.jl")
 include("registry_instance.jl")
 include("exceptions.jl")
+include("utilities.jl")
 
 const GENERAL_REGISTRY = "General"
-
-
-"""
-Get the latest VersionNumber for base_path/Versions.toml
-"""
-function _get_latest_version(base_path::AbstractString)
-    versions_file_path = joinpath(base_path, "Versions.toml")
-
-    if isfile(versions_file_path)
-        versions_content = parsefile(versions_file_path)
-        versions = [VersionNumber(v) for v in collect(keys(versions_content))]
-
-        return first(findmax(versions))
-    end
-end
-
-
-"""
-Get the package name from a UUID
-"""
-function _get_pkg_name(uuid::UUID; registries=reachable_registries())
-    for rego in registries
-        for (pkg_name, pkg_entry) in rego.pkgs
-            if pkg_entry.uuid == uuid
-                return pkg_name
-            end
-        end
-    end
-
-    throw(NoUUIDMatch("No package found with the UUID $uuid"))
-end
-_get_pkg_name(uuid::String; kwargs...) = _get_pkg_name(UUID(uuid); kwargs...)
-
-
-"""
-Get the UUID from a package name and the registry it is in.
-Specify a registry name as well to avoid ambiguity with same package names in multiple registries.
-"""
-function _get_pkg_uuid(
-    pkg_name::String, registry_name::String;
-    depots::Union{String, Vector{String}}=Base.DEPOT_PATH,
-)
-    registry = reachable_registries(registry_name; depots=depots)
-    return _get_pkg_uuid(pkg_name, registry)
-end
-
-function _get_pkg_uuid(pkg_name::String, registry::RegistryInstance)
-    if haskey(registry.pkgs, pkg_name)
-        return registry.pkgs[pkg_name].uuid
-    else
-        throw(PackageNotInRegistry("$pkg_name not in $(registry.name)"))
-    end
-end
 
 
 """
