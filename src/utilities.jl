@@ -27,11 +27,11 @@ function _find_alternative_packages(pkg_to_compare::String, packages::Array)
 end
 
 
-
 """
 Get the package name from a UUID
 """
-function _get_pkg_name(uuid::UUID; registries=reachable_registries())
+
+function _get_pkg_name(uuid::UUID, registries=Array{RegistryInstance})
     for rego in registries
         for (pkg_name, pkg_entry) in rego.pkgs
             if pkg_entry.uuid == uuid
@@ -42,7 +42,11 @@ function _get_pkg_name(uuid::UUID; registries=reachable_registries())
 
     throw(NoUUIDMatch("No package found with the UUID $uuid"))
 end
-_get_pkg_name(uuid::String; kwargs...) = _get_pkg_name(UUID(uuid); kwargs...)
+
+function _get_pkg_name(uuid::UUID; kwargs...)
+    registries = reachable_registries(; kwargs...)
+    return _get_pkg_name(uuid, registries)
+end
 
 
 """
@@ -54,7 +58,7 @@ function _get_pkg_uuid(
     depots::Union{String, Vector{String}}=Base.DEPOT_PATH,
 )
     registry = reachable_registries(registry_name; depots=depots)
-    return _get_pkg_uuid(pkg_name, registry)
+    return _get_pkg_uuid(pkg_name, first(registry))
 end
 
 function _get_pkg_uuid(pkg_name::String, registry::RegistryInstance)

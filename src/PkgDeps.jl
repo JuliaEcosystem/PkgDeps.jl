@@ -35,7 +35,8 @@ Get an array of found registries.
 """
 function reachable_registries(
     registry_names::Array;
-    depots::Union{String, Vector{String}}=Base.DEPOT_PATH
+    depots::Union{String, Vector{String}}=Base.DEPOT_PATH,
+    kwargs...
 )
     registries = RegistryInstance[]
 
@@ -59,8 +60,8 @@ function reachable_registries(
 
     return registries
 end
-reachable_registries(registry_name::String; depots::Union{String, Vector{String}}=Base.DEPOT_PATH) = first(reachable_registries([registry_name]; depots=depots))
-reachable_registries(; depots::Union{String, Vector{String}}=Base.DEPOT_PATH) = reachable_registries([]; depots=depots)
+reachable_registries(registry_name::String; depots::Union{String, Vector{String}}=Base.DEPOT_PATH, kwargs...) = reachable_registries([registry_name]; depots=depots, kwargs...)
+reachable_registries(; depots::Union{String, Vector{String}}=Base.DEPOT_PATH, kwargs...) = reachable_registries([]; depots=depots, kwargs...)
 
 
 """
@@ -82,7 +83,7 @@ Find the users of a given package.
 - `Array{String}`: All packages which are dependent on the given package.
 """
 function users(uuid::UUID; registries::Array{RegistryInstance}=reachable_registries())
-    pkg_name = _get_pkg_name(uuid; registries=registries)
+    pkg_name = _get_pkg_name(uuid, registries)
     downstream_dependencies = String[]
 
     for rego in registries
@@ -122,10 +123,11 @@ end
 """
     users(pkg_name::String, pkg_registry::RegistryInstance; kwargs...)
 
-Find the users of the package named `pkg_name` which is registered in `pkg_registry`.
+Find the users of `pkg_name` which is registered in `pkg_registry_name`.
+Optionally limit search for users of `pkg_name` in specific registries by passing in kwarg `registries`.
 """
-function users(pkg_name::String, pkg_registry::RegistryInstance; kwargs...)
-    uuid = _get_pkg_uuid(pkg_name, pkg_registry)
+function users(pkg_name::String, pkg_registry_name::RegistryInstance; kwargs...)
+    uuid = _get_pkg_uuid(pkg_name, pkg_registry_name)
     return users(uuid; kwargs...)
 end
 

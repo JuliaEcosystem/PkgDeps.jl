@@ -3,20 +3,20 @@ using Test
 using UUIDs
 
 const DEPOT = joinpath(@__DIR__, "resources")
-const FOOBAR_REGISTRY = reachable_registries("Foobar"; depots=DEPOT)
+const FOOBAR_REGISTRY = first(reachable_registries("Foobar"; depots=DEPOT))
 
 
 @testset "internal functions" begin
     @testset "_get_pkg_name" begin
         @testset "uuid to name" begin
             expected = "Case1"
-            pkg_name = PkgDeps._get_pkg_name(UUID("00000000-1111-2222-3333-444444444444"); registries=[FOOBAR_REGISTRY])
+            pkg_name = PkgDeps._get_pkg_name(UUID("00000000-1111-2222-3333-444444444444"); depots=DEPOT)
 
             @test expected == pkg_name
         end
 
         @testset "exception" begin
-            @test_throws NoUUIDMatch PkgDeps._get_pkg_name(UUID("00000000-0000-0000-0000-000000000000"); registries=[FOOBAR_REGISTRY])
+            @test_throws NoUUIDMatch PkgDeps._get_pkg_name(UUID("00000000-0000-0000-0000-000000000000"); registries=FOOBAR_REGISTRY)
         end
     end
 
@@ -48,7 +48,7 @@ end
 
 @testset "reachable_registries" begin
     @testset "specfic registry -- $(typeof(v))" for v in ("Foobar", ["Foobar"])
-        registry = reachable_registries("Foobar"; depots=DEPOT)
+        registry = first(reachable_registries("Foobar"; depots=DEPOT))
 
         @test registry.name == "Foobar"
     end
