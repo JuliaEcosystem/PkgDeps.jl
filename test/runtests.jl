@@ -3,7 +3,7 @@ using Test
 using UUIDs
 
 const DEPOT = joinpath(@__DIR__, "resources")
-const FOOBAR_REGISTRY = first(reachable_registries("Foobar"; depots=DEPOT))
+const FOOBAR_REGISTRY = only(reachable_registries("Foobar"; depots=DEPOT))
 
 
 @testset "internal functions" begin
@@ -48,7 +48,7 @@ end
 
 @testset "reachable_registries" begin
     @testset "specfic registry -- $(typeof(v))" for v in ("Foobar", ["Foobar"])
-        registry = first(reachable_registries("Foobar"; depots=DEPOT))
+        registry = only(reachable_registries("Foobar"; depots=DEPOT))
 
         @test registry.name == "Foobar"
     end

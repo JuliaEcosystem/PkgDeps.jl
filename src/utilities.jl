@@ -31,7 +31,7 @@ end
 Get the package name from a UUID
 """
 
-function _get_pkg_name(uuid::UUID, registries=Array{RegistryInstance})
+function _get_pkg_name(uuid::UUID, registries=RegistryInstance[])
     for rego in registries
         for (pkg_name, pkg_entry) in rego.pkgs
             if pkg_entry.uuid == uuid
@@ -57,8 +57,8 @@ function _get_pkg_uuid(
     pkg_name::String, registry_name::String;
     depots::Union{String, Vector{String}}=Base.DEPOT_PATH,
 )
-    registry = reachable_registries(registry_name; depots=depots)
-    return _get_pkg_uuid(pkg_name, first(registry))
+    registry = only(reachable_registries(registry_name; depots=depots))
+    return _get_pkg_uuid(pkg_name, registry)
 end
 
 function _get_pkg_uuid(pkg_name::String, registry::RegistryInstance)
@@ -73,7 +73,7 @@ function _get_pkg_uuid(pkg_name::String, registry::RegistryInstance)
             warning *= "\nPerhaps you meant: $(string(alt_packages))"
         end
 
-        warning *= "\nOr you can search in another registry using `users(\"$(pkg_name)\"; pkg_registry_name=\"OtherRegistry\")`"
+        warning *= "\nOr you can search in another registry using `users(\"$(pkg_name)\", \"OtherRegistry\")`"
         throw(PackageNotInRegistry(warning))
     end
 end

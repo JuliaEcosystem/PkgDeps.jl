@@ -123,11 +123,10 @@ end
 """
     users(pkg_name::String, pkg_registry::RegistryInstance; kwargs...)
 
-Find the users of `pkg_name` which is registered in `pkg_registry_name`.
-Optionally limit search for users of `pkg_name` in specific registries by passing in kwarg `registries`.
+Find the users of `pkg_name` which is registered in `pkg_registry`.
 """
-function users(pkg_name::String, pkg_registry_name::RegistryInstance; kwargs...)
-    uuid = _get_pkg_uuid(pkg_name, pkg_registry_name)
+function users(pkg_name::String, pkg_registry::RegistryInstance; kwargs...)
+    uuid = _get_pkg_uuid(pkg_name, pkg_registry)
     return users(uuid; kwargs...)
 end
 
