@@ -3,6 +3,7 @@ using Test
 using UUIDs
 
 const DEPOT = joinpath(@__DIR__, "resources")
+const GENERAL_REGISTRY = only(reachable_registries("General"; depots=DEPOT))
 const FOOBAR_REGISTRY = only(reachable_registries("Foobar"; depots=DEPOT))
 
 
@@ -63,15 +64,15 @@ end
 @testset "users" begin
     all_registries = reachable_registries(; depots=DEPOT)
 
-    @testset "specific registry" begin
-        dependents = users("DownDep", FOOBAR_REGISTRY; registries=[FOOBAR_REGISTRY])
+    @testset "specific registry - registered in another registry" begin
+        dependents = users("DownDep", FOOBAR_REGISTRY; registries=[GENERAL_REGISTRY], depots=DEPOT)
 
-        @test length(dependents) == 2
-        [@test case in dependents for case in ["Case1", "Case2"]]
+        @test length(dependents) == 1
+        [@test case in dependents for case in ["Case3"]]
     end
 
     @testset "all registries" begin
-        dependents = users("DownDep", FOOBAR_REGISTRY; registries=all_registries)
+        dependents = users("DownDep", FOOBAR_REGISTRY; registries=all_registries, depots=DEPOT)
 
         @test length(dependents) == 3
         @test !("Case4" in dependents)

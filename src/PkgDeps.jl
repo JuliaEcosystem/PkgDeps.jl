@@ -82,8 +82,12 @@ Find the users of a given package.
 # Returns
 - `Array{String}`: All packages which are dependent on the given package.
 """
-function users(uuid::UUID; registries::Array{RegistryInstance}=reachable_registries())
-    pkg_name = _get_pkg_name(uuid, registries)
+function users(
+    uuid::UUID;
+    registries::Array{RegistryInstance}=reachable_registries(),
+    depots::Union{String, Vector{String}}=Base.DEPOT_PATH
+)
+    pkg_name = _get_pkg_name(uuid, reachable_registries(; depots=depots))
     downstream_dependencies = String[]
 
     for rego in registries
@@ -119,12 +123,6 @@ function users(pkg_name::String, pkg_registry_name::String=GENERAL_REGISTRY; kwa
     return users(uuid; kwargs...)
 end
 
-# Useful for testing using with registries not in `DEPOT_PATH`.
-"""
-    users(pkg_name::String, pkg_registry::RegistryInstance; kwargs...)
-
-Find the users of `pkg_name` which is registered in `pkg_registry`.
-"""
 function users(pkg_name::String, pkg_registry::RegistryInstance; kwargs...)
     uuid = _get_pkg_uuid(pkg_name, pkg_registry)
     return users(uuid; kwargs...)
