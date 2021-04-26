@@ -5,12 +5,13 @@ version = "0.4.0"
 
 [deps]
 Pkg = "44cfe95a-1eb2-52ea-b672-e2afdf69b78f"
+REPL = "3fa0cd96-eef1-5676-8a61-b3b8758bbffb"
 TOML = "fa267f1f-6049-4f14-aa54-33bafae1ed76"
 UUIDs = "cf7118a7-6976-5b1a-9a39-7adc72f591a4"
 
 [compat]
 TOML = "1.0"
-julia = "1"
+julia = "1.5"
 
 [extras]
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
