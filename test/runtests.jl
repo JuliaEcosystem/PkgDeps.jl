@@ -45,6 +45,15 @@ const FOOBAR_REGISTRY = only(reachable_registries("Foobar"; depots=DEPOT))
 
         @test expected == result
     end
+
+    @testset "_find_alternative_packages" begin
+        MAX = 9
+        pkg_to_compare = "package_name"
+        packages = ["$(pkg_to_compare)_$(i)" for i in 1:MAX]
+
+        result = PkgDeps._find_alternative_packages(pkg_to_compare, packages)
+        @test length(result) == MAX
+    end
 end
 
 @testset "reachable_registries" begin

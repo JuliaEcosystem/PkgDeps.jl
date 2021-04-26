@@ -65,8 +65,9 @@ reachable_registries(; depots::Union{String, Vector{String}}=Base.DEPOT_PATH, kw
 
 
 """
-    users(uuid::UUID; kwargs...)
-    users(pkg_name::String, pkg_registry_name::String="$GENERAL_REGISTRY"; kwargs...)
+    users(uuid::UUID; registries::Array{RegistryInstance}=reachable_registries(), depots::Union{String, Vector{String}}=Base.DEPOT_PATH)
+    users(pkg_name::String, pkg_registry_name::String=GENERAL_REGISTRY; kwargs...)
+    users(pkg_name::String, pkg_registry::RegistryInstance; kwargs...))
 
 Find the users of a given package.
 
