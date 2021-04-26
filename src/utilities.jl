@@ -15,15 +15,19 @@ end
 
 """
 Use levenshtein distance to find packages closely named to pkg_to_compare
+
+Rules:
+- Ignore package name casings
+- Only return matches that are between 1 and 2 distances
 """
 function _find_alternative_packages(pkg_to_compare::String, packages::Array)
+    MIN_LEVENSHTEIN = 1
+    MAX_LEVENSHTEIN = 2
+
     pkg_to_compare = uppercase(pkg_to_compare)
     pkg_distances = [(REPL.levenshtein(uppercase(pkg), pkg_to_compare), pkg) for pkg in packages]
-    sort!(pkg_distances)
-    counts = [count(x -> x[1] <= i, pkg_distances) for i in 0:2]
-    max_distance = max(0, searchsortedlast(counts, 8) - 1)
 
-    return [pkg for (distance, pkg) in pkg_distances if distance <= max_distance]
+    return [x[2] for x in pkg_distances if MIN_LEVENSHTEIN <= x[1] <= MAX_LEVENSHTEIN]
 end
 
 
