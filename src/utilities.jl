@@ -37,7 +37,7 @@ function _find_latest_pkg_entry(pkg_name::Union{AbstractString, Missing}, pkg_uu
         end
     end
     if length(entries) == 0
-        throw(PackageNotInRegistry("No package found with supplied name and/or UUID."))
+        throw(PackageNotInRegistry("No package found with supplied name and/or UUID. Got: `pkg_name`=$(pkg_name), `pkg_uuid`=$(pkg_uuid)."))
     elseif length(entries) == 1
         return only(entries)
     else

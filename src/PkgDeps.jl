@@ -9,7 +9,7 @@ using Compat
 export PkgEntry, RegistryInstance
 export NoUUIDMatch, PackageNotInRegistry
 export users, reachable_registries
-export direct_dependencies
+export direct_dependencies, dependencies
 
 include("pkg_entry.jl")
 include("registry_instance.jl")
@@ -153,5 +153,57 @@ function direct_dependencies(pkg_uuid::UUID; registries::Array{RegistryInstance}
     return direct_dependencies(_find_latest_pkg_entry(missing, pkg_uuid; registries))
 end
 
+
+"""
+    dependencies(
+        pkg_name::Union{AbstractString, Missing}, pkg_uuid::Union{Missing, UUID}=missing;
+        registries::Array{RegistryInstance}=reachable_registries()
+    )
+
+Find all packages that the latest version of `pkg_name` depends on (directly or indirectly).
+# Arguments
+- `pkg_name::AbstractString`: Name of the package
+- `pkg_uuid::UUID`: UUID of the package, if available
+# Keywords
+- `registries::Array{RegistryInstance}=reachable_registries()`: Registries to look into
+# Returns
+- `Dict{String, UUID}()`: Packages which `pkg_name` depends on.
+"""
+function dependencies(
+    pkg_name::Union{AbstractString, Missing}, pkg_uuid::Union{Missing, UUID}=missing;
+    registries::Array{RegistryInstance}=reachable_registries()
+)
+    return _dependencies!(Dict{String, UUID}(), (pkg_name, pkg_uuid); registries)
+end
+
+function dependencies(
+    uuid::UUID;
+    registries::Array{RegistryInstance}=reachable_registries()
+)
+    return dependencies(missing, uuid; registries)
+end
+
+
+# recursive helper that accumulates into `deps_found`
+function _dependencies!(
+    deps_found::Dict{String, UUID},
+    (name, uuid);
+    registries::Array{RegistryInstance}=reachable_registries()
+)
+    @show name, uuid
+    direct_deps = direct_dependencies(_find_latest_pkg_entry(name, uuid; registries))
+    for (dep_name, dep_uuid) in pairs(direct_deps)
+        if dep_name ∈ keys(deps_found)
+            if dep_uuid != deps_found[dep_name]
+                error("Package (possibly transitively) depends on $(dep_name) twice, with different UUIDs: $(dep_uuid) and $(deps_found[dep_name])!")
+            end
+        else
+            deps_found[dep_name] = dep_uuid
+            _dependencies!(deps_found, (dep_name, dep_uuid); registries=registries)
+        end
+    end
+   
+    return deps_found
+end
 
 end  # module
