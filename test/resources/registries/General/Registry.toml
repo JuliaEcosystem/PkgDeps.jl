@@ -11,5 +11,5 @@ some amount of consideration when choosing package names.
 """
 
 [packages]
-000eeb74-f857-587a-a816-be5685e97e75 = { name = "Case3", path = "Case3" }
-001eeb74-f857-587a-a816-be5685e97e75 = { name = "Case4", path = "Case4" }
+40783f5b-986f-4943-913a-db8b00df110d = { name = "Case3", path = "Case3" }
+172f9e6e-38ba-42e1-abf1-05c2c32c0454 = { name = "Case4", path = "Case4" }
