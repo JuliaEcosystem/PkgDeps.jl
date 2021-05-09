@@ -120,17 +120,17 @@ end
 
 end
 
-@testset "Dependencies" begin
-    deps = dependencies("ClashPkg"; registries=all_registries)
+@testset "`direct_dependencies`" begin
+    deps = direct_dependencies("ClashPkg"; registries=all_registries)
     @test deps == Dict("Case4" => UUID("172f9e6e-38ba-42e1-abf1-05c2c32c0454"))
-    deps = dependencies("ClashPkg"; registries=[GENERAL_REGISTRY])
+    deps = direct_dependencies("ClashPkg"; registries=[GENERAL_REGISTRY])
     @test deps == Dict("Case4" => UUID("172f9e6e-38ba-42e1-abf1-05c2c32c0454"))
 
-    deps = dependencies("ClashPkg"; registries=[FOOBAR_REGISTRY])
+    deps = direct_dependencies("ClashPkg"; registries=[FOOBAR_REGISTRY])
     @test deps == Dict("Case2" => UUID("a2a98da0-c97c-48ea-aa95-967bbb6a44f4"))
 
-    deps = dependencies("Case4"; registries=all_registries)
+    deps = direct_dependencies("Case4"; registries=all_registries)
     @test isempty(deps)
-    deps = dependencies("Case2"; registries=all_registries)
+    deps = direct_dependencies("Case2"; registries=all_registries)
     @test deps == Dict("DownDep" => UUID("000eeb74-f857-587a-a816-be5685e97e75"))
 end
