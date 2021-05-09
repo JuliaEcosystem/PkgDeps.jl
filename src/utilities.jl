@@ -69,7 +69,7 @@ end
 """
 Get the package name from a UUID
 """
-function _get_pkg_name(uuid::UUID, registries=RegistryInstance[])
+function _get_pkg_name(uuid::UUID, registries)
     for rego in registries
         for (pkg_name, pkg_entry) in rego.pkgs
             if pkg_entry.uuid == uuid
