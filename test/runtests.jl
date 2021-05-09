@@ -132,5 +132,27 @@ end
     deps = direct_dependencies("Case4"; registries=all_registries)
     @test isempty(deps)
     deps = direct_dependencies("Case2"; registries=all_registries)
-    @test deps == Dict("DownDep" => UUID("000eeb74-f857-587a-a816-be5685e97e75"))
+    @test deps == Dict("DownDep" => UUID("000eeb74-f857-587a-a816-be5685e97e75"),
+                       "Statistics" => UUID("10745b16-79ce-11e8-11f9-7d13ad32a3b2"))
+end
+
+@testset "`dependencies`" begin
+    deps_foo = dependencies("ClashPkg"; registries=[FOOBAR_REGISTRY])
+    @test length(deps_foo) == 3
+    @test Set(["Statistics", "DownDep", "Case2"]) == Set(keys(deps_foo))
+
+    # alternatively, use the UUID. Can allow all registries here, since the UUID specifies exactly.
+    @test deps_foo == dependencies(clashpkg_foobar_uuid; registries=all_registries)
+
+    # or both name and uuid:
+    @test deps_foo == dependencies("ClashPkg", clashpkg_foobar_uuid; registries=all_registries)
+
+    # no deps at the latest version
+    @test isempty(dependencies("Case4"; registries = all_registries))
+
+    # ClashUser1 only depends on the ClashPkg in Foobar registry, so it should be `deps_foo` plus ClashPkg itself.
+    deps = dependencies("ClashUser1"; registries = all_registries)
+    @test length(deps) == length(deps_foo) + 1
+    @test deps_foo ⊆ deps
+    @test ("ClashPkg" => clashpkg_foobar_uuid) ∈ deps
 end
