@@ -12,6 +12,39 @@ function _get_latest_version(base_path::AbstractString)
     end
 end
 
+"""
+    _find_latest_pkg_entry(pkg_name::Union{AbstractString, Missing}, pkg_uuid::Union{Missing, UUID}=missing; registries::Array{RegistryInstance}=reachable_registries())
+
+Given a list of registries, find the entry corresponding to the given package (specified as a `name` and/or an `UUID`) with the latest version.
+
+For example, if a package is registered in two registries with the same name and UUID, returns the `PkgEntry` corresponding to the registry which
+has the higher version number of the package.
+"""
+function _find_latest_pkg_entry(pkg_name::Union{AbstractString, Missing}, pkg_uuid::Union{Missing, UUID}=missing; registries::Array{RegistryInstance}=reachable_registries())
+    if ismissing(pkg_name) && ismissing(pkg_uuid)
+        throw(ArgumentError("Must supply either a `pkg_name` or `pkg_uuid`!"))
+    end
+    entries = PkgEntry[]
+    for rego in registries
+        for (name, entry) in rego.pkgs
+            if !ismissing(pkg_name)
+                pkg_name == name || continue
+            end
+            if !ismissing(pkg_uuid)
+                pkg_uuid == pkg_entry.uuid || continue
+            end
+            push!(entries, entry)
+        end
+    end
+    if length(entries) == 0
+        error("Could not find!")
+    elseif length(entries) == 1
+        return only(entries)
+    else
+        # uses `Compat` for the 2-argument `argmax` introduced in Julia v1.7
+        return argmax(_get_latest_version, entries)
+    end
+end
 
 """
 Use levenshtein distance to find packages closely named to pkg_to_compare
@@ -34,7 +67,6 @@ end
 """
 Get the package name from a UUID
 """
-
 function _get_pkg_name(uuid::UUID, registries=RegistryInstance[])
     for rego in registries
         for (pkg_name, pkg_entry) in rego.pkgs

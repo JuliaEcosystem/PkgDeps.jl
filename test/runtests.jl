@@ -104,3 +104,9 @@ end
     end
 
 end
+
+@testset "Dependencies" begin
+    dependencies = dependencies("ClashPkg", FOOBAR_REGISTRY; registries=all_registries, depots=DEPOT)
+
+
+end
