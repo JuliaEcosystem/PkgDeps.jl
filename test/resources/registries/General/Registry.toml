@@ -13,3 +13,4 @@ some amount of consideration when choosing package names.
 [packages]
 40783f5b-986f-4943-913a-db8b00df110d = { name = "Case3", path = "Case3" }
 172f9e6e-38ba-42e1-abf1-05c2c32c0454 = { name = "Case4", path = "Case4" }
+39dceb45-186c-466b-9eef-57dbb7902773 = { name = "ClashPkg", path = "ClashPkg" }

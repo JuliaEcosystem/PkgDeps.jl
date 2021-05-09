@@ -7,3 +7,5 @@ description = "Fake private package registry."
 00000000-1111-2222-3333-444444444444 = { name = "Case1", path = "Case1" }
 a2a98da0-c97c-48ea-aa95-967bbb6a44f4 = { name = "Case2", path = "Case2" }
 000eeb74-f857-587a-a816-be5685e97e75 = { name = "DownDep", path = "DownDep" }
+6402c8d7-2ba1-4f69-b0bd-e6ec13832549 = { name = "ClashPkg", path = "ClashPkg" }
+a457e2d6-f3f7-45f3-9559-ce8bafa0c916 = { name = "ClashUser1", path = "ClashUser1"}

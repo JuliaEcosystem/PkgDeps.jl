@@ -6,6 +6,8 @@ const DEPOT = joinpath(@__DIR__, "resources")
 const GENERAL_REGISTRY = only(reachable_registries("General"; depots=DEPOT))
 const FOOBAR_REGISTRY = only(reachable_registries("Foobar"; depots=DEPOT))
 
+clashpkg_foobar_uuid = UUID("6402c8d7-2ba1-4f69-b0bd-e6ec13832549")
+clashpkg_general_uuid = UUID("39dceb45-186c-466b-9eef-57dbb7902773")
 
 @testset "internal functions" begin
     @testset "_get_pkg_name" begin
@@ -30,6 +32,11 @@ const FOOBAR_REGISTRY = only(reachable_registries("Foobar"; depots=DEPOT))
 
             pkg_uuid = PkgDeps._get_pkg_uuid("Case1", FOOBAR_REGISTRY)
             @test expected == pkg_uuid
+        end
+
+        @testset "Same name in two registries" begin
+            @test clashpkg_foobar_uuid == PkgDeps._get_pkg_uuid("ClashPkg", "Foobar"; depots=DEPOT)
+            @test clashpkg_general_uuid == PkgDeps._get_pkg_uuid("ClashPkg", "General"; depots=DEPOT)
         end
 
         @testset "exception" begin
@@ -87,4 +94,13 @@ end
         @test !("Case4" in dependents)
         [@test case in dependents for case in ["Case1", "Case2", "Case3"]]
     end
+
+    @testset "ClashPkg" begin
+        dependents = users("ClashPkg", FOOBAR_REGISTRY; registries=all_registries, depots=DEPOT)
+        @test dependents == ["ClashUser1"]
+
+        dependents = users("ClashPkg", GENERAL_REGISTRY; registries=all_registries, depots=DEPOT)
+        @test isempty(dependents)
+    end
+
 end
