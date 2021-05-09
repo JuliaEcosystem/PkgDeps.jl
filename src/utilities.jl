@@ -31,18 +31,20 @@ function _find_latest_pkg_entry(pkg_name::Union{AbstractString, Missing}, pkg_uu
                 pkg_name == name || continue
             end
             if !ismissing(pkg_uuid)
-                pkg_uuid == pkg_entry.uuid || continue
+                pkg_uuid == entry.uuid || continue
             end
             push!(entries, entry)
         end
     end
     if length(entries) == 0
-        error("Could not find!")
+        throw(PackageNotInRegistry("No package found with supplied name and/or UUID."))
     elseif length(entries) == 1
         return only(entries)
     else
+        base_path = pkg_entry -> joinpath(pkg_entry.registry_path, pkg_entry.path)
+
         # uses `Compat` for the 2-argument `argmax` introduced in Julia v1.7
-        return argmax(_get_latest_version, entries)
+        return argmax(_get_latest_version ∘ base_path, entries)
     end
 end
 
