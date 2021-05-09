@@ -88,7 +88,6 @@ function users(
     registries::Array{RegistryInstance}=reachable_registries(),
     depots::Union{String, Vector{String}}=Base.DEPOT_PATH
 )
-    pkg_name = _get_pkg_name(uuid, reachable_registries(; depots=depots))
     downstream_dependencies = String[]
 
     for rego in registries
@@ -104,10 +103,10 @@ function users(
                 # Use the latest_version of pkg, and check to see if pkg_name is in its dependents
                 for version_range in dependency_versions
                     if in(latest_version, VersionRange(version_range))
-                        dependencies = collect(keys(deps_content[version_range]))
-
+                        dependencies = collect(values(deps_content[version_range]))
+                        @show dependencies
                         # Check if pkg_name is used in the latest version of pkg
-                        if pkg_name in dependencies
+                        if uuid in dependencies
                             push!(downstream_dependencies, pkg)
                         end
                     end
