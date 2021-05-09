@@ -1,5 +1,6 @@
 module PkgDeps
 
+using Pkg
 using Pkg.Types: VersionNumber, VersionRange
 using REPL
 using TOML: parsefile
@@ -17,6 +18,10 @@ include("exceptions.jl")
 include("utilities.jl")
 
 const GENERAL_REGISTRY = "General"
+
+# borrowed from <https://github.com/JuliaRegistries/RegistryTools.jl/blob/77cae9ef6a075e1d6ec1592bc3e166234d3f01c8/src/builtin_pkgs.jl>
+const stdlibs = isdefined(Pkg.Types, :stdlib) ? Pkg.Types.stdlib : Pkg.Types.stdlibs
+const STDLIBS = stdlibs()
 
 
 """
@@ -122,6 +127,8 @@ end
     
 Returns the direct dependencies of the latest version of a given package
 in the form of `Dict` with names as keys and UUIDs as values.
+
+Standard libraries are assumed to not have any dependencies.
 """
 direct_dependencies
 
@@ -146,10 +153,16 @@ function direct_dependencies(pkg_entry::PkgEntry)
 end
 
 function direct_dependencies(pkg_name::String; registries::Array{RegistryInstance}=reachable_registries())
+    if pkg_name ∈ keys(STDLIBS)
+        return Dict{String, UUID}()
+    end
     return direct_dependencies(_find_latest_pkg_entry(pkg_name, missing; registries))
 end
 
 function direct_dependencies(pkg_uuid::UUID; registries::Array{RegistryInstance}=reachable_registries())
+    if pkg_uuid ∈ values(STDLIBS)
+        return Dict{String, UUID}()
+    end
     return direct_dependencies(_find_latest_pkg_entry(missing, pkg_uuid; registries))
 end
 
@@ -161,6 +174,10 @@ end
     )
 
 Find all packages that the latest version of `pkg_name` depends on (directly or indirectly).
+
+Note: each package in the dependency tree is assumed to be at the latest version; compat bounds
+are ignored. Additionally, standard libraries are assumed to not have any dependencies.
+
 # Arguments
 - `pkg_name::AbstractString`: Name of the package
 - `pkg_uuid::UUID`: UUID of the package, if available
@@ -190,7 +207,9 @@ function _dependencies!(
     (name, uuid);
     registries::Array{RegistryInstance}=reachable_registries()
 )
-    @show name, uuid
+    if (uuid => name) in pairs(STDLIBS)
+        return deps_found
+    end
     direct_deps = direct_dependencies(_find_latest_pkg_entry(name, uuid; registries))
     for (dep_name, dep_uuid) in pairs(direct_deps)
         if dep_name ∈ keys(deps_found)
