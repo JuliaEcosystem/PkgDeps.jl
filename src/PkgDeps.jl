@@ -148,13 +148,9 @@ function direct_dependencies(pkg_entry::PkgEntry)
     return all_direct_dependencies
 end
 
-function direct_dependencies(pkg_name::String; registries::Array{RegistryInstance}=reachable_registries())
-    return direct_dependencies(_find_latest_pkg_entry(pkg_name, missing; registries))
-end
+direct_dependencies(pkg_name::String; registries::Array{RegistryInstance}=reachable_registries()) = direct_dependencies(_find_latest_pkg_entry(pkg_name, missing; registries))
 
-function direct_dependencies(pkg_uuid::UUID; registries::Array{RegistryInstance}=reachable_registries())
-    return direct_dependencies(_find_latest_pkg_entry(missing, pkg_uuid; registries))
-end
+direct_dependencies(pkg_uuid::UUID; registries::Array{RegistryInstance}=reachable_registries()) = direct_dependencies(_find_latest_pkg_entry(missing, pkg_uuid; registries))
 
 
 end  # module
