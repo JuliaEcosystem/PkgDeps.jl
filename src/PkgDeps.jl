@@ -129,10 +129,12 @@ function direct_dependencies(pkg_entry::PkgEntry)
     base_path = joinpath(pkg_entry.registry_path, pkg_entry.path)
     deps_file_path = joinpath(base_path, "Deps.toml")
     all_direct_dependencies = Dict{String, UUID}()
+
     if isfile(deps_file_path)
         deps_content = parsefile(deps_file_path)
         dependency_versions = collect(keys(deps_content))
         latest_version = _get_latest_version(base_path)
+
         # Use the latest_version of pkg, and check to see if pkg_name is in its dependents
         for version_range in dependency_versions
             if in(latest_version, VersionRange(version_range))
@@ -142,6 +144,7 @@ function direct_dependencies(pkg_entry::PkgEntry)
             end
         end
     end
+
     return all_direct_dependencies
 end
 

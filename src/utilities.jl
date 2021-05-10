@@ -24,7 +24,9 @@ function _find_latest_pkg_entry(pkg_name::Union{AbstractString, Missing}, pkg_uu
     if ismissing(pkg_name) && ismissing(pkg_uuid)
         throw(ArgumentError("Must supply either a `pkg_name` or `pkg_uuid`!"))
     end
+
     entries = PkgEntry[]
+
     for rego in registries
         for (name, entry) in rego.pkgs
             if !ismissing(pkg_name)
@@ -36,7 +38,8 @@ function _find_latest_pkg_entry(pkg_name::Union{AbstractString, Missing}, pkg_uu
             push!(entries, entry)
         end
     end
-    if length(entries) == 0
+
+    if isempty(entries)
         throw(PackageNotInRegistry("No package found with supplied name and/or UUID."))
     elseif length(entries) == 1
         return only(entries)
