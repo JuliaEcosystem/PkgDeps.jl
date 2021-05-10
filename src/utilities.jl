@@ -40,7 +40,7 @@ function _find_latest_pkg_entry(pkg_name::Union{AbstractString, Missing}, pkg_uu
     end
 
     if isempty(entries)
-        throw(PackageNotInRegistry("No package found with supplied name and/or UUID."))
+        throw(PackageNotInRegistry("No package found with supplied name and/or UUID. Got: `pkg_name`=$(pkg_name), `pkg_uuid`=$(pkg_uuid)."))
     elseif length(entries) == 1
         return only(entries)
     else
@@ -72,7 +72,7 @@ end
 """
 Get the package name from a UUID
 """
-function _get_pkg_name(uuid::UUID, registries=RegistryInstance[])
+function _get_pkg_name(uuid::UUID, registries)
     for rego in registries
         for (pkg_name, pkg_entry) in rego.pkgs
             if pkg_entry.uuid == uuid

@@ -10,7 +10,7 @@ on another.
 Single patch pre-1.0 release that has always been dependent on `DownDep`.
 
 ### Case2
-Single minor pre-1.0 release that has always been dependent on `DownDep`.
+Single minor pre-1.0 release that has always been dependent on `DownDep` and  `Statistics`
 
 ### Case3
 Single post-1.0 release that is dependent on `DownDep`.

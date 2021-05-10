@@ -1,5 +1,6 @@
 module PkgDeps
 
+using Pkg
 using Pkg.Types: VersionNumber, VersionRange
 using REPL
 using TOML: parsefile
@@ -9,7 +10,7 @@ using Compat
 export PkgEntry, RegistryInstance
 export NoUUIDMatch, PackageNotInRegistry
 export users, reachable_registries
-export direct_dependencies
+export direct_dependencies, dependencies
 
 include("pkg_entry.jl")
 include("registry_instance.jl")
@@ -17,6 +18,10 @@ include("exceptions.jl")
 include("utilities.jl")
 
 const GENERAL_REGISTRY = "General"
+
+# borrowed from <https://github.com/JuliaRegistries/RegistryTools.jl/blob/77cae9ef6a075e1d6ec1592bc3e166234d3f01c8/src/builtin_pkgs.jl>
+const stdlibs = isdefined(Pkg.Types, :stdlib) ? Pkg.Types.stdlib : Pkg.Types.stdlibs
+const STDLIBS = stdlibs()
 
 
 """
@@ -120,6 +125,8 @@ end
     
 Returns the direct dependencies of the latest version of a given package
 in the form of `Dict` with names as keys and UUIDs as values.
+
+Standard libraries are assumed to not have any dependencies.
 """
 direct_dependencies
 
@@ -146,9 +153,79 @@ function direct_dependencies(pkg_entry::PkgEntry)
     return all_direct_dependencies
 end
 
-direct_dependencies(pkg_name::String; registries::Array{RegistryInstance}=reachable_registries()) = direct_dependencies(_find_latest_pkg_entry(pkg_name, missing; registries))
+function direct_dependencies(pkg_name::String; registries::Array{RegistryInstance}=reachable_registries())
+    if pkg_name in keys(STDLIBS)
+        return Dict{String, UUID}()
+    end
+    return direct_dependencies(_find_latest_pkg_entry(pkg_name, missing; registries))
+end
 
-direct_dependencies(pkg_uuid::UUID; registries::Array{RegistryInstance}=reachable_registries()) = direct_dependencies(_find_latest_pkg_entry(missing, pkg_uuid; registries))
+function direct_dependencies(pkg_uuid::UUID; registries::Array{RegistryInstance}=reachable_registries())
+    if pkg_uuid in values(STDLIBS)
+        return Dict{String, UUID}()
+    end
+    return direct_dependencies(_find_latest_pkg_entry(missing, pkg_uuid; registries))
+end
 
+
+"""
+    dependencies(
+        pkg_name::Union{AbstractString, Missing}, pkg_uuid::Union{Missing, UUID}=missing;
+        registries::Array{RegistryInstance}=reachable_registries()
+    )
+
+Find all packages that the latest version of `pkg_name` depends on (directly or indirectly).
+
+Note: each package in the dependency tree is assumed to be at the latest version; compat bounds
+are ignored. Additionally, standard libraries are assumed to not have any dependencies.
+
+# Arguments
+- `pkg_name::AbstractString`: Name of the package
+- `pkg_uuid::UUID`: UUID of the package, if available
+# Keywords
+- `registries::Array{RegistryInstance}=reachable_registries()`: Registries to look into
+# Returns
+- `Dict{String, UUID}()`: Packages which `pkg_name` depends on.
+"""
+function dependencies(
+    pkg_name::Union{AbstractString, Missing}, pkg_uuid::Union{Missing, UUID}=missing;
+    registries::Array{RegistryInstance}=reachable_registries()
+)
+    return _dependencies!(Dict{String, UUID}(), (pkg_name, pkg_uuid); registries)
+end
+
+function dependencies(
+    uuid::UUID;
+    registries::Array{RegistryInstance}=reachable_registries()
+)
+    return dependencies(missing, uuid; registries)
+end
+
+
+# recursive helper that accumulates into `deps_found`
+function _dependencies!(
+    deps_found::Dict{String, UUID},
+    (name, uuid);
+    registries::Array{RegistryInstance}=reachable_registries()
+)
+    if (uuid => name) in pairs(STDLIBS)
+        return deps_found
+    end
+
+    direct_deps = direct_dependencies(_find_latest_pkg_entry(name, uuid; registries))
+   
+    for (dep_name, dep_uuid) in pairs(direct_deps)
+        if dep_name ∈ keys(deps_found)
+            if dep_uuid != deps_found[dep_name]
+                error("Package (possibly transitively) depends on $(dep_name) twice, with different UUIDs: $(dep_uuid) and $(deps_found[dep_name])!")
+            end
+        else
+            deps_found[dep_name] = dep_uuid
+            _dependencies!(deps_found, (dep_name, dep_uuid); registries=registries)
+        end
+    end
+   
+    return deps_found
+end
 
 end  # module
