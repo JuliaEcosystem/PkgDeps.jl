@@ -96,14 +96,14 @@ end
 
 @testset "users" begin
     @testset "specific registry - registered in another registry" begin
-        dependents = users("DownDep", FOOBAR_REGISTRY; registries=[GENERAL_REGISTRY], depots=DEPOT)
+        dependents = users("DownDep", FOOBAR_REGISTRY; registries=[GENERAL_REGISTRY])
 
         @test length(dependents) == 1
         [@test case in dependents for case in ["Case3"]]
     end
 
     @testset "all registries" begin
-        dependents = users("DownDep", FOOBAR_REGISTRY; registries=all_registries, depots=DEPOT)
+        dependents = users("DownDep", FOOBAR_REGISTRY; registries=all_registries)
 
         @test length(dependents) == 3
         @test !("Case4" in dependents)
@@ -111,10 +111,10 @@ end
     end
 
     @testset "ClashPkg" begin
-        dependents = users("ClashPkg", FOOBAR_REGISTRY; registries=all_registries, depots=DEPOT)
+        dependents = users("ClashPkg", FOOBAR_REGISTRY; registries=all_registries)
         @test dependents == ["ClashUser1"]
 
-        dependents = users("ClashPkg", GENERAL_REGISTRY; registries=all_registries, depots=DEPOT)
+        dependents = users("ClashPkg", GENERAL_REGISTRY; registries=all_registries)
         @test isempty(dependents)
     end
 
