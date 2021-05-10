@@ -4,10 +4,12 @@ using Pkg.Types: VersionNumber, VersionRange
 using REPL
 using TOML: parsefile
 using UUIDs
+using Compat
 
 export PkgEntry, RegistryInstance
 export NoUUIDMatch, PackageNotInRegistry
 export users, reachable_registries
+export direct_dependencies
 
 include("pkg_entry.jl")
 include("registry_instance.jl")
@@ -90,25 +92,10 @@ function users(
     downstream_dependencies = String[]
 
     for rego in registries
-        for (pkg, v) in rego.pkgs
-            base_path = joinpath(v.registry_path, v.path)
-            deps_file_path = joinpath(base_path, "Deps.toml")
-
-            if isfile(deps_file_path)
-                deps_content = parsefile(deps_file_path)
-                dependency_versions = collect(keys(deps_content))
-                latest_version = _get_latest_version(base_path)
-
-                # Use the latest_version of pkg, and check to see if pkg_name is in its dependents
-                for version_range in dependency_versions
-                    if in(latest_version, VersionRange(version_range))
-                        dependencies = UUID.(values(deps_content[version_range]))
-                        # Check if pkg_name is used in the latest version of pkg
-                        if uuid in dependencies
-                            push!(downstream_dependencies, pkg)
-                        end
-                    end
-                end
+        for (pkg, pkg_entry) in rego.pkgs
+            deps = direct_dependencies(pkg_entry)
+            if any(isequal(uuid), values(deps))
+                push!(downstream_dependencies, pkg)
             end
         end
     end
@@ -125,5 +112,43 @@ function users(pkg_name::String, pkg_registry::RegistryInstance; kwargs...)
     uuid = _get_pkg_uuid(pkg_name, pkg_registry)
     return users(uuid; kwargs...)
 end
+
+"""
+    direct_dependencies(pkg_name::String;
+        registries::Array{RegistryInstance}=reachable_registries()) -> Dict{String, UUID}
+    direct_dependencies(pkg_uuid::UUID; registries::Array{RegistryInstance}=reachable_registries()) -> Dict{String, UUID}
+    
+Returns the direct dependencies of the latest version of a given package
+in the form of `Dict` with names as keys and UUIDs as values.
+"""
+direct_dependencies
+
+function direct_dependencies(pkg_entry::PkgEntry)
+    base_path = joinpath(pkg_entry.registry_path, pkg_entry.path)
+    deps_file_path = joinpath(base_path, "Deps.toml")
+    all_direct_dependencies = Dict{String, UUID}()
+
+    if isfile(deps_file_path)
+        deps_content = parsefile(deps_file_path)
+        dependency_versions = collect(keys(deps_content))
+        latest_version = _get_latest_version(base_path)
+
+        # Use the latest_version of pkg, and check to see if pkg_name is in its dependents
+        for version_range in dependency_versions
+            if in(latest_version, VersionRange(version_range))
+                for (k, v) in pairs(deps_content[version_range])
+                    all_direct_dependencies[k] = UUID(v)
+                end
+            end
+        end
+    end
+
+    return all_direct_dependencies
+end
+
+direct_dependencies(pkg_name::String; registries::Array{RegistryInstance}=reachable_registries()) = direct_dependencies(_find_latest_pkg_entry(pkg_name, missing; registries))
+
+direct_dependencies(pkg_uuid::UUID; registries::Array{RegistryInstance}=reachable_registries()) = direct_dependencies(_find_latest_pkg_entry(missing, pkg_uuid; registries))
+
 
 end  # module

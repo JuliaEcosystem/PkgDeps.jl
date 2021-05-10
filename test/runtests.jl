@@ -8,6 +8,7 @@ const FOOBAR_REGISTRY = only(reachable_registries("Foobar"; depots=DEPOT))
 
 clashpkg_foobar_uuid = UUID("6402c8d7-2ba1-4f69-b0bd-e6ec13832549")
 clashpkg_general_uuid = UUID("39dceb45-186c-466b-9eef-57dbb7902773")
+all_registries = reachable_registries(; depots=DEPOT)
 
 @testset "internal functions" begin
     @testset "_get_pkg_name" begin
@@ -61,6 +62,22 @@ clashpkg_general_uuid = UUID("39dceb45-186c-466b-9eef-57dbb7902773")
         result = PkgDeps._find_alternative_packages(pkg_to_compare, packages)
         @test length(result) == MAX
     end
+
+    @testset "`_find_latest_pkg_entry`" begin
+        entry = PkgDeps._find_latest_pkg_entry("ClashPkg"; registries=all_registries)
+        # General has a later version of `ClashPkg`
+        @test entry.uuid == clashpkg_general_uuid
+
+        # No conflict here, so it should just find the right one
+        entry = PkgDeps._find_latest_pkg_entry("Case4"; registries=all_registries)
+        @test entry.uuid == UUID("172f9e6e-38ba-42e1-abf1-05c2c32c0454")
+
+        entry = PkgDeps._find_latest_pkg_entry(missing, UUID("172f9e6e-38ba-42e1-abf1-05c2c32c0454"); registries=all_registries)
+        @test entry.name == "Case4"
+
+        @test_throws PackageNotInRegistry PkgDeps._find_latest_pkg_entry("FakePackage"; registries=all_registries)
+        @test_throws ArgumentError PkgDeps._find_latest_pkg_entry(missing, missing; registries=all_registries)
+    end
 end
 
 @testset "reachable_registries" begin
@@ -78,8 +95,6 @@ end
 end
 
 @testset "users" begin
-    all_registries = reachable_registries(; depots=DEPOT)
-
     @testset "specific registry - registered in another registry" begin
         dependents = users("DownDep", FOOBAR_REGISTRY; registries=[GENERAL_REGISTRY])
 
@@ -103,4 +118,19 @@ end
         @test isempty(dependents)
     end
 
+end
+
+@testset "`direct_dependencies`" begin
+    deps = direct_dependencies("ClashPkg"; registries=all_registries)
+    @test deps == Dict("Case4" => UUID("172f9e6e-38ba-42e1-abf1-05c2c32c0454"))
+    deps = direct_dependencies("ClashPkg"; registries=[GENERAL_REGISTRY])
+    @test deps == Dict("Case4" => UUID("172f9e6e-38ba-42e1-abf1-05c2c32c0454"))
+
+    deps = direct_dependencies("ClashPkg"; registries=[FOOBAR_REGISTRY])
+    @test deps == Dict("Case2" => UUID("a2a98da0-c97c-48ea-aa95-967bbb6a44f4"))
+
+    deps = direct_dependencies("Case4"; registries=all_registries)
+    @test isempty(deps)
+    deps = direct_dependencies("Case2"; registries=all_registries)
+    @test deps == Dict("DownDep" => UUID("000eeb74-f857-587a-a816-be5685e97e75"))
 end

@@ -17,3 +17,13 @@ Single post-1.0 release that is dependent on `DownDep`.
 
 ### Case4
 Two releases where `DownDep` was previously a dependency and no longer is.
+
+## ClashPkg
+
+This package is registered in both `Foobar` and `General`, with a later version in `General`.
+
+The version in `Foobar` depends on `Case2`, while the version in General depends on `Case4`.
+
+## ClashUser1
+
+This package uses the `ClashPkg` registered in `Foobar`.
