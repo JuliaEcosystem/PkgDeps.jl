@@ -65,7 +65,7 @@ reachable_registries(; depots::Union{String, Vector{String}}=Base.DEPOT_PATH, kw
 
 
 """
-    users(uuid::UUID; registries::Array{RegistryInstance}=reachable_registries(), depots::Union{String, Vector{String}}=Base.DEPOT_PATH)
+    users(uuid::UUID; registries::Array{RegistryInstance}=reachable_registries())
     users(pkg_name::String, pkg_registry_name::String=GENERAL_REGISTRY; kwargs...)
     users(pkg_name::String, pkg_registry::RegistryInstance; kwargs...))
 
@@ -86,9 +86,7 @@ Find the users of a given package.
 function users(
     uuid::UUID;
     registries::Array{RegistryInstance}=reachable_registries(),
-    depots::Union{String, Vector{String}}=Base.DEPOT_PATH
 )
-    pkg_name = _get_pkg_name(uuid, reachable_registries(; depots=depots))
     downstream_dependencies = String[]
 
     for rego in registries
@@ -104,10 +102,9 @@ function users(
                 # Use the latest_version of pkg, and check to see if pkg_name is in its dependents
                 for version_range in dependency_versions
                     if in(latest_version, VersionRange(version_range))
-                        dependencies = collect(keys(deps_content[version_range]))
-
+                        dependencies = UUID.(values(deps_content[version_range]))
                         # Check if pkg_name is used in the latest version of pkg
-                        if pkg_name in dependencies
+                        if uuid in dependencies
                             push!(downstream_dependencies, pkg)
                         end
                     end
