@@ -140,8 +140,8 @@ end
 
 @testset "`dependencies`" begin
     deps_foo = dependencies("ClashPkg"; registries=[FOOBAR_REGISTRY])
-    @test length(deps_foo) == 3
-    @test Set(["Statistics", "DownDep", "Case2"]) == Set(keys(deps_foo))
+    @test length(deps_foo) == 4
+    @test Set(["Statistics", "Test", "DownDep", "Case2"]) == Set(keys(deps_foo))
 
     # alternatively, use the UUID. Can allow all registries here, since the UUID specifies exactly.
     @test deps_foo == dependencies(clashpkg_foobar_uuid; registries=all_registries)

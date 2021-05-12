@@ -17,16 +17,8 @@ function RegistryInstance(path::AbstractString)
         name = info["name"]
         pkgpath = info["path"]
 
-        p_repo = ""
-        try
-            p = parsefile(joinpath(path, pkgpath, "Package.toml"))
-            p_name = p["name"]
-            p_uuid = UUID(p["uuid"])
-            p_repo = p["repo"]
-            @assert p_name == name
-            @assert p_uuid == uuid
-        catch
-        end
+        p = parsefile(joinpath(path, pkgpath, "Package.toml"))
+        p_repo = p["repo"]
 
         pkg = PkgEntry(pkgpath, path, name, uuid, p_repo)
         pkgs[name] = pkg
