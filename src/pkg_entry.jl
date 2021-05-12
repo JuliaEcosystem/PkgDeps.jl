@@ -3,4 +3,5 @@ struct PkgEntry
     registry_path::String
     name::String
     uuid::UUID
+    repo::String
 end
