@@ -67,10 +67,12 @@ all_registries = reachable_registries(; depots=DEPOT)
         entry = PkgDeps._find_latest_pkg_entry("ClashPkg"; registries=all_registries)
         # General has a later version of `ClashPkg`
         @test entry.uuid == clashpkg_general_uuid
+        @test entry.repo == "https://path.to.repo/"
 
         # No conflict here, so it should just find the right one
         entry = PkgDeps._find_latest_pkg_entry("Case4"; registries=all_registries)
         @test entry.uuid == UUID("172f9e6e-38ba-42e1-abf1-05c2c32c0454")
+        @test entry.repo == "https://path.to.repo/"
 
         entry = PkgDeps._find_latest_pkg_entry(missing, UUID("172f9e6e-38ba-42e1-abf1-05c2c32c0454"); registries=all_registries)
         @test entry.name == "Case4"
@@ -138,8 +140,8 @@ end
 
 @testset "`dependencies`" begin
     deps_foo = dependencies("ClashPkg"; registries=[FOOBAR_REGISTRY])
-    @test length(deps_foo) == 3
-    @test Set(["Statistics", "DownDep", "Case2"]) == Set(keys(deps_foo))
+    @test length(deps_foo) == 4
+    @test Set(["Statistics", "Test", "DownDep", "Case2"]) == Set(keys(deps_foo))
 
     # alternatively, use the UUID. Can allow all registries here, since the UUID specifies exactly.
     @test deps_foo == dependencies(clashpkg_foobar_uuid; registries=all_registries)
