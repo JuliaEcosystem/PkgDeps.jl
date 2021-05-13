@@ -27,3 +27,7 @@ The version in `Foobar` depends on `Case2`, while the version in General depends
 ## ClashUser1
 
 This package uses the `ClashPkg` registered in `Foobar`.
+
+## DownDep
+
+This package is registered in `Foobar`
