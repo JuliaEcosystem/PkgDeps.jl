@@ -136,6 +136,11 @@ end
     deps = direct_dependencies("Case2"; registries=all_registries)
     @test deps == Dict("DownDep" => UUID("000eeb74-f857-587a-a816-be5685e97e75"),
                        "Statistics" => UUID("10745b16-79ce-11e8-11f9-7d13ad32a3b2"))
+
+    deps = direct_dependencies("LinearAlgebra")
+    @test isempty(deps)
+    deps = direct_dependencies(UUID("37e2e46d-f89d-539d-b4ee-838fcccc9c8e"))
+    @test isempty(deps)
 end
 
 @testset "`dependencies`" begin

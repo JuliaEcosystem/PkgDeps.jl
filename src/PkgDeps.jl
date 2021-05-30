@@ -154,14 +154,14 @@ function direct_dependencies(pkg_entry::PkgEntry)
 end
 
 function direct_dependencies(pkg_name::String; registries::Array{RegistryInstance}=reachable_registries())
-    if pkg_name in keys(STDLIBS)
+    if pkg_name in values(STDLIBS)
         return Dict{String, UUID}()
     end
     return direct_dependencies(_find_latest_pkg_entry(pkg_name, missing; registries))
 end
 
 function direct_dependencies(pkg_uuid::UUID; registries::Array{RegistryInstance}=reachable_registries())
-    if pkg_uuid in values(STDLIBS)
+    if pkg_uuid in keys(STDLIBS)
         return Dict{String, UUID}()
     end
     return direct_dependencies(_find_latest_pkg_entry(missing, pkg_uuid; registries))
