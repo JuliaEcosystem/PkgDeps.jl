@@ -139,6 +139,7 @@ end
 
     deps = direct_dependencies("LinearAlgebra")
     @test isempty(deps)
+    # test with LinearAlgebra's UUID
     deps = direct_dependencies(UUID("37e2e46d-f89d-539d-b4ee-838fcccc9c8e"))
     @test isempty(deps)
 end
