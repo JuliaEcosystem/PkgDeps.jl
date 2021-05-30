@@ -1,7 +1,7 @@
 name = "PkgDeps"
 uuid = "839e9fc8-855b-5b3c-a3b7-2833d3dd1f59"
 license = "MIT"
-version = "0.6.1"
+version = "0.6.2"
 
 [deps]
 Compat = "34da2185-b29b-5c13-b0c7-acf172513d20"
