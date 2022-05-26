@@ -6,6 +6,8 @@ using REPL
 using TOML: parsefile
 using UUIDs
 using Compat
+import Tar
+using CodecZlib: GzipDecompressorStream
 
 export PkgEntry, RegistryInstance
 export NoUUIDMatch, PackageNotInRegistry
@@ -53,14 +55,27 @@ function reachable_registries(
 
     for d in depots
         isdir(d) || continue
-        reg_dir = joinpath(d, "registries")
-        isdir(reg_dir) || continue
+        registries_dir = joinpath(d, "registries")
+        isdir(registries_dir) || continue
 
-        for name in readdir(reg_dir)
-            if isempty(registry_names) || name in registry_names
-                file = joinpath(reg_dir, name, "Registry.toml")
-                isfile(file) || continue
-                push!(registries, RegistryInstance(joinpath(reg_dir, name)))
+        for file_name in readdir(registries_dir)
+            if isdir(registries_dir, file_name)
+                registry_name = file_name
+                registry_path = joinpath(registries_dir, registry_name)
+            elseif endswith(file_name, ".tar.gz")
+                registry_name = chop(file_name, tail = length(".tar.gz"))
+
+                # We need to unpack the registry into a temporary directory.
+                registry_path = open(joinpath(registries_dir, file_name)) do io
+                    Tar.extract(GzipDecompressorStream(io))
+                end
+            else
+                continue
+            end
+
+            if isempty(registry_names) || registry_name in registry_names
+                isfile(registry_path, "Registry.toml") || continue
+                push!(registries, RegistryInstance(registry_path))
             end
         end
     end
