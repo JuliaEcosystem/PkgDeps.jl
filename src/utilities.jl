@@ -28,9 +28,9 @@ function _find_latest_pkg_entry(pkg_name::Union{AbstractString, Missing}, pkg_uu
     entries = PkgEntry[]
 
     for rego in registries
-        for (name, entry) in rego.pkgs
+        for entry in values(rego.pkgs)
             if !ismissing(pkg_name)
-                pkg_name == name || continue
+                pkg_name == entry.name || continue
             end
             if !ismissing(pkg_uuid)
                 pkg_uuid == entry.uuid || continue
@@ -74,9 +74,9 @@ Get the package name from a UUID
 """
 function _get_pkg_name(uuid::UUID, registries)
     for rego in registries
-        for (pkg_name, pkg_entry) in rego.pkgs
-            if pkg_entry.uuid == uuid
-                return pkg_name
+        for entry in values(rego.pkgs)
+            if entry.uuid == uuid
+                return entry.name
             end
         end
     end
@@ -103,18 +103,20 @@ function _get_pkg_uuid(
 end
 
 function _get_pkg_uuid(pkg_name::String, registry::RegistryInstance)
-    if haskey(registry.pkgs, pkg_name)
-        return registry.pkgs[pkg_name].uuid
-    else
-        alt_packages = _find_alternative_packages(pkg_name, collect(keys(registry.pkgs)))
-
-        warning = "The package $(pkg_name) was not found in the $(registry.name) registry."
-
-        if !isempty(alt_packages)
-            warning *= "\nPerhaps you meant: $(string(alt_packages))"
+    for entry in values(registry.pkgs)
+        if entry.name == pkg_name
+            return entry.uuid
         end
-
-        warning *= "\nOr you can search in another registry using `users(\"$(pkg_name)\", \"OtherRegistry\")`"
-        throw(PackageNotInRegistry(warning))
     end
+
+    alt_packages = _find_alternative_packages(pkg_name, [entry.name for entry in values(registry.pkgs)])
+
+    warning = "The package $(pkg_name) was not found in the $(registry.name) registry."
+
+    if !isempty(alt_packages)
+        warning *= "\nPerhaps you meant: $(string(alt_packages))"
+    end
+
+    warning *= "\nOr you can search in another registry using `users(\"$(pkg_name)\", \"OtherRegistry\")`"
+    throw(PackageNotInRegistry(warning))
 end
