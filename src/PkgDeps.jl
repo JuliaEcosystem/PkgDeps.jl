@@ -12,8 +12,13 @@ export NoUUIDMatch, PackageNotInRegistry
 export users, reachable_registries
 export direct_dependencies, dependencies
 
-include("pkg_entry.jl")
-include("registry_instance.jl")
+@static if VERSION >= v"1.7"
+    using Pkg.Registry: RegistryInstance, PkgEntry
+else
+    include("pkg_entry.jl")
+    include("registry_instance.jl")
+end
+
 include("exceptions.jl")
 include("utilities.jl")
 
@@ -45,27 +50,39 @@ function reachable_registries(
     depots::Union{String, Vector{String}}=Base.DEPOT_PATH,
     kwargs...
 )
-    registries = RegistryInstance[]
+    @static if VERSION >= v"1.7"
+        all_registries = Pkg.Registry.reachable_registries(; depots)
 
-    if depots isa String
-        depots = [depots]
-    end
+        registries = if isempty(registry_names)
+            all_registries
+        else
+            [r for r in all_registries if r.name in registry_names]
+        end
 
-    for d in depots
-        isdir(d) || continue
-        reg_dir = joinpath(d, "registries")
-        isdir(reg_dir) || continue
+        return registries
+    else
+        registries = RegistryInstance[]
 
-        for name in readdir(reg_dir)
-            if isempty(registry_names) || name in registry_names
-                file = joinpath(reg_dir, name, "Registry.toml")
-                isfile(file) || continue
-                push!(registries, RegistryInstance(joinpath(reg_dir, name)))
+        if depots isa String
+            depots = [depots]
+        end
+
+        for d in depots
+            isdir(d) || continue
+            reg_dir = joinpath(d, "registries")
+            isdir(reg_dir) || continue
+
+            for name in readdir(reg_dir)
+                if isempty(registry_names) || name in registry_names
+                    file = joinpath(reg_dir, name, "Registry.toml")
+                    isfile(file) || continue
+                    push!(registries, RegistryInstance(joinpath(reg_dir, name)))
+                end
             end
         end
-    end
 
-    return registries
+        return registries
+    end
 end
 reachable_registries(registry_name::String; depots::Union{String, Vector{String}}=Base.DEPOT_PATH, kwargs...) = reachable_registries([registry_name]; depots=depots, kwargs...)
 reachable_registries(; depots::Union{String, Vector{String}}=Base.DEPOT_PATH, kwargs...) = reachable_registries([]; depots=depots, kwargs...)
@@ -97,10 +114,10 @@ function users(
     downstream_dependencies = String[]
 
     for rego in registries
-        for (pkg, pkg_entry) in rego.pkgs
+        for pkg_entry in values(rego.pkgs)
             deps = direct_dependencies(pkg_entry)
             if any(isequal(uuid), values(deps))
-                push!(downstream_dependencies, pkg)
+                push!(downstream_dependencies, pkg_entry.name)
             end
         end
     end
