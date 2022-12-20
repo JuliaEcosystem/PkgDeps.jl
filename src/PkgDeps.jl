@@ -21,7 +21,16 @@ const GENERAL_REGISTRY = "General"
 
 # borrowed from <https://github.com/JuliaRegistries/RegistryTools.jl/blob/77cae9ef6a075e1d6ec1592bc3e166234d3f01c8/src/builtin_pkgs.jl>
 const stdlibs = isdefined(Pkg.Types, :stdlib) ? Pkg.Types.stdlib : Pkg.Types.stdlibs
-const STDLIBS = stdlibs()
+const STDLIBS = @static if VERSION >= v"1.8"
+    # As of v1.8, the dictionary that we get from Pkg maps the UUID of
+    # each standard library package to a (name, version) tuple.
+    Dict(uuid => name
+         for (uuid, (name, _)) in stdlibs())
+else
+    # In earlier versions, the dictionary maps the UUID of each
+    # standard library package to its name.
+    stdlibs()
+end
 
 
 """
