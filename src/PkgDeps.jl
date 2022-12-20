@@ -6,14 +6,13 @@ using REPL
 using TOML: parsefile
 using UUIDs
 using Compat
+using RegistryInstances: RegistryInstances, PkgEntry, RegistryInstance
 
 export PkgEntry, RegistryInstance
 export NoUUIDMatch, PackageNotInRegistry
 export users, reachable_registries
 export direct_dependencies, dependencies
 
-include("pkg_entry.jl")
-include("registry_instance.jl")
 include("exceptions.jl")
 include("utilities.jl")
 
@@ -45,27 +44,15 @@ function reachable_registries(
     depots::Union{String, Vector{String}}=Base.DEPOT_PATH,
     kwargs...
 )
-    registries = RegistryInstance[]
+    registries = RegistryInstances.reachable_registries(; depots)
 
-    if depots isa String
-        depots = [depots]
-    end
-
-    for d in depots
-        isdir(d) || continue
-        reg_dir = joinpath(d, "registries")
-        isdir(reg_dir) || continue
-
-        for name in readdir(reg_dir)
-            if isempty(registry_names) || name in registry_names
-                file = joinpath(reg_dir, name, "Registry.toml")
-                isfile(file) || continue
-                push!(registries, RegistryInstance(joinpath(reg_dir, name)))
-            end
+    if isempty(registry_names)
+        registries
+    else
+        filter(registries) do r
+            r.name in registry_names
         end
     end
-
-    return registries
 end
 reachable_registries(registry_name::String; depots::Union{String, Vector{String}}=Base.DEPOT_PATH, kwargs...) = reachable_registries([registry_name]; depots=depots, kwargs...)
 reachable_registries(; depots::Union{String, Vector{String}}=Base.DEPOT_PATH, kwargs...) = reachable_registries([]; depots=depots, kwargs...)
@@ -97,10 +84,10 @@ function users(
     downstream_dependencies = String[]
 
     for rego in registries
-        for (pkg, pkg_entry) in rego.pkgs
+        for pkg_entry in values(rego.pkgs)
             deps = direct_dependencies(pkg_entry)
             if any(isequal(uuid), values(deps))
-                push!(downstream_dependencies, pkg)
+                push!(downstream_dependencies, pkg_entry.name)
             end
         end
     end
