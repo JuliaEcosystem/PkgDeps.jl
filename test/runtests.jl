@@ -1,6 +1,7 @@
 using PkgDeps
 using Test
 using UUIDs
+using RegistryInstances: registry_info
 
 const DEPOT = joinpath(@__DIR__, "resources")
 const GENERAL_REGISTRY = only(reachable_registries("General"; depots=DEPOT))
@@ -67,12 +68,12 @@ all_registries = reachable_registries(; depots=DEPOT)
         entry = PkgDeps._find_latest_pkg_entry("ClashPkg"; registries=all_registries)
         # General has a later version of `ClashPkg`
         @test entry.uuid == clashpkg_general_uuid
-        @test entry.repo == "https://path.to.repo/"
+        @test registry_info(entry).repo == "https://path.to.repo/"
 
         # No conflict here, so it should just find the right one
         entry = PkgDeps._find_latest_pkg_entry("Case4"; registries=all_registries)
         @test entry.uuid == UUID("172f9e6e-38ba-42e1-abf1-05c2c32c0454")
-        @test entry.repo == "https://path.to.repo/"
+        @test registry_info(entry).repo == "https://path.to.repo/"
 
         entry = PkgDeps._find_latest_pkg_entry(missing, UUID("172f9e6e-38ba-42e1-abf1-05c2c32c0454"); registries=all_registries)
         @test entry.name == "Case4"
